@@ -111,6 +111,46 @@ function genPropsAccessExp(name) {
 const GLOBALS_ALLOWED = "Infinity,undefined,NaN,isFinite,isNaN,parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,BigInt,console";
 const isGloballyAllowed = /* @__PURE__ */ makeMap(GLOBALS_ALLOWED);
 
+const range = 2;
+function generateCodeFrame(source, start = 0, end = source.length) {
+  let lines = source.split(/(\r?\n)/);
+  const newlineSequences = lines.filter((_, idx) => idx % 2 === 1);
+  lines = lines.filter((_, idx) => idx % 2 === 0);
+  let count = 0;
+  const res = [];
+  for (let i = 0; i < lines.length; i++) {
+    count += lines[i].length + (newlineSequences[i] && newlineSequences[i].length || 0);
+    if (count >= start) {
+      for (let j = i - range; j <= i + range || end > count; j++) {
+        if (j < 0 || j >= lines.length)
+          continue;
+        const line = j + 1;
+        res.push(
+          `${line}${" ".repeat(Math.max(3 - String(line).length, 0))}|  ${lines[j]}`
+        );
+        const lineLength = lines[j].length;
+        const newLineSeqLength = newlineSequences[j] && newlineSequences[j].length || 0;
+        if (j === i) {
+          const pad = start - (count - (lineLength + newLineSeqLength));
+          const length = Math.max(
+            1,
+            end > count ? lineLength - pad : end - start
+          );
+          res.push(`   |  ` + " ".repeat(pad) + "^".repeat(length));
+        } else if (j > i) {
+          if (end > count) {
+            const length = Math.max(Math.min(end - count, lineLength), 1);
+            res.push(`   |  ` + "^".repeat(length));
+          }
+          count += lineLength + newLineSeqLength;
+        }
+      }
+      break;
+    }
+  }
+  return res.join("\n");
+}
+
 function normalizeStyle(value) {
   if (isArray(value)) {
     const res = {};
@@ -18513,12 +18553,20 @@ function compileToFunction(template, options) {
       {
         hoistStatic: true,
         whitespace: "preserve",
-        onError: void 0,
-        onWarn: NOOP
+        onError: onError ,
+        onWarn: (e) => onError(e, true) 
       },
       options
     )
   );
+  function onError(err, asWarning = false) {
+    asWarning ? err.message : `Template compilation error: ${err.message}`;
+    err.loc && generateCodeFrame(
+      template,
+      err.loc.start.offset,
+      err.loc.end.offset
+    );
+  }
   const render = new Function("Vue", code)(runtimeDom);
   render._rc = true;
   return compileCache[key] = render;

@@ -17806,8 +17806,8 @@ function compileToFunction(template, options) {
       {
         hoistStatic: true,
         whitespace: "preserve",
-        onError: !!(process.env.NODE_ENV !== "production") ? onError : void 0,
-        onWarn: !!(process.env.NODE_ENV !== "production") ? (e) => onError(e, true) : NOOP
+        onError: !!(process.env.NODE_ENV !== "production") || !!(process.env.WARNING_LEVEL !== "none") ? onError : void 0,
+        onWarn: !!(process.env.NODE_ENV !== "production") || !!(process.env.WARNING_LEVEL !== "none") ? (e) => onError(e, true) : NOOP
       },
       options
     )
