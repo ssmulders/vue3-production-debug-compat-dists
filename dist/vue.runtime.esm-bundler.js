@@ -5416,7 +5416,7 @@ const PublicInstanceProxyHandlers = {
           return isFunction(val) ? Object.assign(val.bind(instance.proxy), val) : val;
         }
       }
-    } else if (!!(process.env.NODE_ENV !== "production") && currentRenderingInstance && (!isString(key) || // #1091 avoid internal isRef/isVNode checks on component instance leading
+    } else if ((!!(process.env.NODE_ENV !== "production") || !!(process.env.WARNING_LEVEL !== "none")) && currentRenderingInstance && (!isString(key) || // #1091 avoid internal isRef/isVNode checks on component instance leading
     // to infinite warning loop
     key.indexOf("__v") !== 0)) {
       if (data !== EMPTY_OBJ && isReservedPrefix(key[0]) && hasOwn(data, key)) {
@@ -5427,7 +5427,7 @@ const PublicInstanceProxyHandlers = {
         );
       } else if (instance === currentRenderingInstance) {
         warn(
-          `Property ${JSON.stringify(key)} was accessed during render but is not defined on instance.`
+          `Property ${JSON.stringify(key)} was accessed during MEDIMO render but is not defined on instance.`
         );
       }
     }
