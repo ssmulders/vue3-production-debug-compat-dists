@@ -1480,7 +1480,7 @@ function popWarningContext() {
   stack.pop();
 }
 function warn(msg, ...args) {
-  if (!!!(process.env.NODE_ENV !== "production"))
+  if (!!!(process.env.NODE_ENV !== "production") && !!!(process.env.WARNING_LEVEL !== "none"))
     return;
   pauseTracking();
   const instance = stack.length ? stack[stack.length - 1].component : null;
